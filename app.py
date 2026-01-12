@@ -24,11 +24,23 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_text = event.message.text
+    user_text = event.message.text.strip().lower()
+
+    if user_text == "สวัสดี":
+        reply = "สวัสดีครับ 😊 มีอะไรให้ช่วยไหม"
+
+    elif user_text == "help":
+        reply = (
+            "📚 Bookfair Bot ทำอะไรได้บ้าง\n"
+            "- พิมพ์ 'สวัสดี'\n"
+            "- พิมพ์ 'help'\n"
+            "(ฟีเจอร์อื่น ๆ กำลังมา)"
+        )
+
+    else:
+        reply = "ขอโทษนะครับ ยังไม่เข้าใจข้อความนี้ 🥺 พิมพ์ 'help' ได้นะ"
 
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(
-            text=f"รับแล้ว 📚\nคุณพิมพ์ว่า: {user_text}"
-        )
+        TextSendMessage(text=reply)
     )
