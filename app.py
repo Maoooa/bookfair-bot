@@ -2,6 +2,9 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from sheet import get_sheet
+from datetime import datetime
+
 import os
 
 app = Flask(__name__)
@@ -24,23 +27,27 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_text = event.message.text.strip().lower()
+    text = event.message.text.strip()
 
-    if user_text == "สวัสดี":
-        reply = "สวัสดีครับ 😊 มีอะไรให้ช่วยไหม"
+    if text.startswith("เพิ่ม"):
+        try:
+            parts = text.split(" ")
+            book_name = parts[1]
+            price = parts[2]
 
-    elif user_text == "help":
-        reply = (
-            "📚 Bookfair Bot ทำอะไรได้บ้าง\n"
-            "- พิมพ์ 'สวัสดี'\n"
-            "- พิมพ์ 'help'\n"
-            "(ฟีเจอร์อื่น ๆ กำลังมา)"
+            sheet = get_sheet()
+            sheet.append_row([
+                datetime.now().strftime("%Y-%m-%d %H:%M"),
+                book_name,
+                price,
+                event.source.user_id
+            ])
+
+            reply = f"📚 เพิ่มหนังสือแล้ว\nชื่อ: {book_name}\nราคา: {price} บาท"
+        except:
+            reply = "❌ รูปแบบไม่ถูกต้อง\nตัวอย่าง: เพิ่ม ชื่อหนังสือ 350"
+
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply)
         )
-
-    else:
-        reply = "ขอโทษนะครับ ยังไม่เข้าใจข้อความนี้ 🥺 พิมพ์ 'help' ได้นะ"
-
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply)
-    )
